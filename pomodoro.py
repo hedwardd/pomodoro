@@ -10,7 +10,8 @@ class PomodoroApp(object):
             "continue": "Continue Timer",
             "stop": "Stop Timer",
             "break_message": "Time is up! Take a break :)",
-            "interval": 1500
+            "halfway_message": "Halfway there!",
+            "interval": 1800
         }
         self.app = rumps.App(self.config["app_name"])
         self.timer = rumps.Timer(self.on_tick, 1)
@@ -39,6 +40,11 @@ class PomodoroApp(object):
             self.stop_timer()
             self.stop_button.set_callback(None)
         else:
+            if sender.count > 0 and sender.end / sender.count == 2:
+                rumps.notification(
+                    title=self.config["app_name"],
+                    subtitle=self.config["halfway_message"],
+                    message='')
             self.stop_button.set_callback(self.stop_timer)
             self.app.title = '{:2d}:{:02d}'.format(mins, secs)
         sender.count += 1
