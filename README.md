@@ -9,7 +9,8 @@ This is my clone/remix of [Pomodoro](https://github.com/visini/pomodoro/), an op
 ## Updates
 
 - Halfway Notification (Done!)
-- Break Mode (In Progress)
+- Break Mode (Done!)
+- Interval Settings (Coming soon)
 - Custom Intervals (Coming Soon)
 
 ![Screenshot](screenshot.png)
