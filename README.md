@@ -10,7 +10,7 @@ This is my clone/remix of [Pomodoro](https://github.com/visini/pomodoro/), an op
 
 - Halfway Notification (Done!)
 - Break Mode (Done!)
-- Interval Settings (Coming soon)
+- More Interval Options (Coming soon)
 - Custom Intervals (Coming Soon)
 
 ![Screenshot](screenshot.png)
