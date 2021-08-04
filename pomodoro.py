@@ -15,14 +15,17 @@ class PomodoroApp(object):
             "pause_break": "Pause Break",
             "continue_break": "Continue Break",
             "stop_break": "Stop Break",
-            "break_end_message": "Break is up. Time to get back to it :)",
+            "break_end_message": "Break's up. Time to get back to it :)",
             "halfway_message": "Halfway there!",
+            "overtime_message": "Wrap it up! You're {:2d} minutes over",
             "interval": 1800,
             "interval2": 900,
             "break_interval": 600,
             "break_interval2": 300,
+            "overtime_interval": 300,
             # "interval": 10,
             # "break_interval": 8,
+            # "overtime_interval": 60,
         }
 
         # Rumps Objects
@@ -52,6 +55,7 @@ class PomodoroApp(object):
         self.interval2 = self.config["interval2"]
         self.break_interval = self.config["break_interval"]
         self.break_interval2 = self.config["break_interval2"]
+        self.overtime_interval = self.config["overtime_interval"]
         self.is_break = False
 
         # Initiate
@@ -79,11 +83,18 @@ class PomodoroApp(object):
                 title=self.config["app_name"],
                 subtitle=noti_message,
                 message='')
-        # Don't send halfway notification if on break
+        # Send halfway notification if not on break
         elif sender.count > 0 and sender.end / sender.count == 2 and not self.is_break:
             rumps.notification(
                 title=self.config["app_name"],
                 subtitle=self.config["halfway_message"],
+                message='')
+        # Send overtime notification if over by __ minutes
+        elif time_left < 0 and time_left % self.overtime_interval == 0:
+            subtitle = self.config["overtime_message"].format(mins)
+            rumps.notification(
+                title=self.config["app_name"],
+                subtitle=subtitle,
                 message='')
         formatted_time = '{:2d}:{:02d}'.format(mins, secs) if time_left >= 0 else '(+{:2d}:{:02d} )'.format(mins, secs) 
         self.app.title = formatted_time if not self.is_break else "🧘‍♂️" + formatted_time + "🧘‍♀️"

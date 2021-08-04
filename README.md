@@ -14,9 +14,10 @@ This is my clone/remix of [Pomodoro](https://github.com/visini/pomodoro/), an op
 
 ## Updates
 
-- Halfway Notification (Done!)
-- Break Mode (Done!)
-- More Interval Options (Done!)
-- Custom Intervals (Coming Soon)
+- Halfway Notification (Done)
+- Break Mode (Done)
+- More Interval Options (Done)
+- Overtime Notifications (Done)
+- Custom Intervals (Roadmap)
 
 ![Screenshot](screenshot.png)
