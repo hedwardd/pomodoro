@@ -1,4 +1,6 @@
 import rumps
+
+
 class PomodoroApp(object):
     def __init__(self):
         self.config = {
@@ -48,7 +50,8 @@ class PomodoroApp(object):
         self.break_submenu.add(self.start_pause_break)
         self.break_submenu.add(self.start_pause_break2)
 
-        self.app.menu = [self.start_pause_timer, self.start_pause_timer2, self.stop_button, self.break_submenu]
+        self.app.menu = [self.start_pause_timer,
+                         self.start_pause_timer2, self.stop_button, self.break_submenu]
 
         # Values/Attributes
         self.interval = self.config["interval"]
@@ -75,7 +78,7 @@ class PomodoroApp(object):
         time_left = sender.end - sender.count
         mins = time_left // 60 if time_left >= 0 else (-1 * time_left) // 60
         secs = time_left % 60 if time_left >= 0 else (-1 * time_left) % 60
-        is_break = True if sender.end != sender.interval else False
+
         if time_left == 0:
             # Send different notification if on break
             noti_message = self.config["timer_end_message"] if not self.is_break else self.config["break_end_message"]
@@ -96,8 +99,10 @@ class PomodoroApp(object):
                 title=self.config["app_name"],
                 subtitle=subtitle,
                 message='')
-        formatted_time = '{:2d}:{:02d}'.format(mins, secs) if time_left >= 0 else '(+{:2d}:{:02d} )'.format(mins, secs) 
-        self.app.title = formatted_time if not self.is_break else "🧘‍♂️" + formatted_time + "🧘‍♀️"
+        formatted_time = '{:2d}:{:02d}'.format(
+            mins, secs) if time_left >= 0 else '(+{:2d}:{:02d} )'.format(mins, secs)
+        self.app.title = formatted_time if not self.is_break else "🧘‍♂️" + \
+            formatted_time + "🧘‍♀️"
         sender.count += 1
 
     # TODO: Separate button text updates from timer update. I.e., separate actions
