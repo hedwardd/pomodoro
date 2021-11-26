@@ -97,10 +97,9 @@ class PomodoroApp(object):
             title=self.config["start2"],
             callback=self.handle_start_button(self.config["interval2"])
         ))
-        # TODO: add custom input option for break
         self.session_submenu.add(rumps.MenuItem(
             title=self.config["custom_input_button_label"],
-            callback=self.handle_open_input_window
+            callback=self.handle_custom_length_button(False),
         ))
         self.break_submenu = rumps.MenuItem(title="Start Break")
         self.break_submenu.add(rumps.MenuItem(
@@ -112,6 +111,10 @@ class PomodoroApp(object):
             title=self.config["start_break2"],
             callback=self.handle_start_button(
                 self.config["break_interval2"], True)
+        ))
+        self.break_submenu.add(rumps.MenuItem(
+            title=self.config["custom_input_button_label"],
+            callback=self.handle_custom_length_button(True),
         ))
 
         self.input_window = rumps.Window(
@@ -125,6 +128,21 @@ class PomodoroApp(object):
 
         self.update_title()
         self.update_menu()
+
+    def open_custom_input_window(self, is_break: bool = False):
+        if is_break == True:
+            self.input_window.title = 'Custom Break'
+            self.input_window.ok = 'Start break'
+        else:
+            self.input_window.title = 'Custom Session'
+            self.input_window.ok = 'Start session'
+
+        response = self.input_window.run()  # blocking
+        # if clicked start button and input is valid
+        if response.clicked == 1 and response.text.isdigit():
+            self.start_timer(int(response.text) * 60, is_break)
+        else:
+            self.input_window.close()
 
     def start_timer(self, interval: int, is_break: bool = False):
         self.state["timer_state"] = "running"
@@ -163,6 +181,9 @@ class PomodoroApp(object):
     def handle_start_button(self, interval: int, is_break: bool = False):
         return (lambda _: self.start_timer(interval, is_break))
 
+    def handle_custom_length_button(self, is_break: bool = False):
+        return (lambda _: self.open_custom_input_window(is_break))
+
     def handle_pause_button(self, _):
         self.pause_timer()
 
@@ -171,14 +192,6 @@ class PomodoroApp(object):
 
     def handle_stop_button(self, _):
         self.stop_timer()
-
-    def handle_open_input_window(self, _):
-        response = self.input_window.run()  # blocking ?
-        # if clicked start button and input is valid
-        if response.clicked == 1 and response.text.isdigit():
-            self.start_timer(int(response.text) * 60)
-        else:
-            self.input_window.close()
 
     def update_menu(self):
         self.app.menu.clear()
