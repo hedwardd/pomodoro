@@ -174,8 +174,8 @@ class PomodoroApp(object):
 
     def handle_open_input_window(self, _):
         response = self.input_window.run()  # blocking ?
-        if response.clicked == 1:
-            # TODO: validate input
+        # if clicked start button and input is valid
+        if response.clicked == 1 and response.text.isdigit():
             self.start_timer(int(response.text) * 60)
         else:
             self.input_window.close()
