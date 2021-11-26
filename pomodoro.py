@@ -1,15 +1,16 @@
 import rumps
+from rumps.rumps import quit_application
 
 CONFIG = {
     "app_name": "Pomodoro Remix",
-    "start": "Start 30m Timer",
-    "start2": "Start 15m Timer",
-    "pause": "Pause Timer",
-    "continue": "Continue Timer",
+    "start1": "Start 30m Session",
+    "start2": "Start 15m Session",
+    "pause": "Pause Session",
+    "continue": "Continue Session",
     "stop": "Stop Timer",
     "timer_end_message": "Time is up! Take a break :)",
     "break_menu": "Break",
-    "start_break": "Start 10m Break",
+    "start_break1": "Start 10m Break",
     "start_break2": "Start 5m Break",
     "pause_break": "Pause Break",
     "continue_break": "Continue Break",
@@ -17,31 +18,36 @@ CONFIG = {
     "break_end_message": "Break's up. Time to get back to it :)",
     "halfway_message": "Halfway there!",
     "overtime_message": "Wrap it up! You're {:2d} minutes over",
-    "interval": 1800,
+    "interval1": 1800,
     "interval2": 900,
-    "break_interval": 600,
+    "break_interval1": 600,
     "break_interval2": 300,
     "overtime_interval": 300,
-    # "interval": 10,
+    # "interval1": 10,
     # "interval2": 5,
-    # "break_interval": 8,
+    # "break_interval1": 8,
     # "break_interval2": 4,
     # "overtime_interval": 5,
 }
 
-# Calculations
+
+def minutes_for_timer(seconds):
+    return seconds // 60 if seconds >= 0 else (-1 * seconds) // 60
 
 
-def get_time_left(interval, elapsed):
-    return interval - elapsed
+def seconds_for_timer(seconds):
+    return seconds % 60 if seconds >= 0 else (-1 * seconds) % 60
 
 
-def get_minutes_left(time_left):
-    return time_left // 60 if time_left >= 0 else (-1 * time_left) // 60
+def formatted_time_from_seconds(seconds):
+    mins = minutes_for_timer(seconds)
+    secs = seconds_for_timer(seconds)
+    return '{:2d}:{:02d}'.format(mins, secs) if seconds >= 0 else '(+{:2d}:{:02d} )'.format(mins, secs)
 
 
-def get_seconds_left(time_left):
-    return time_left % 60 if time_left >= 0 else (-1 * time_left) % 60
+def get_formatted_time_for_mode(seconds_left, is_break):
+    formatted_time = formatted_time_from_seconds(seconds_left)
+    return formatted_time if not is_break else "🧘‍♂️" + formatted_time + "🧘‍♀️"
 
 
 def should_send_timeup_message(time_left):
@@ -56,101 +62,151 @@ def should_send_overtime_message(overtime_interval, time_left):
     return time_left < 0 and time_left % overtime_interval == 0
 
 
-def get_formatted_time(time_left):
-    mins = get_minutes_left(time_left)
-    secs = get_seconds_left(time_left)
-    return '{:2d}:{:02d}'.format(mins, secs) if time_left >= 0 else '(+{:2d}:{:02d} )'.format(mins, secs)
-
-
-def get_formatted_time_for_mode(time_left, is_break):
-    formatted_time = get_formatted_time(time_left)
-    return formatted_time if not is_break else "🧘‍♂️" + formatted_time + "🧘‍♀️"
+INITIAL_STATE = {
+    "timer_state": "stopped",
+    "elapsed": 0,
+    "is_break": False,
+    "interval": CONFIG["interval1"],
+}
 
 
 class PomodoroApp(object):
     def __init__(self):
         self.config = CONFIG
+        self.state = INITIAL_STATE.copy()
+        # {
+        #     "timer_state": "stopped",
+        #     "elapsed": 0,
+        #     "is_break": False,
+        #     "interval": None,
+        # }
 
-        # Rumps Objects
-        self.app = rumps.App(self.config["app_name"])
+        self.app = rumps.App(
+            self.config["app_name"],
+            quit_button=None,
+        )
         self.timer = rumps.Timer(self.on_tick, 1)
 
-        # Menu Setup
-        self.start_pause_timer = rumps.MenuItem(
-            title=self.config["start"],
-            callback=self.start_timer
-        )
-        self.start_pause_timer2 = rumps.MenuItem(
+        self.session_submenu = rumps.MenuItem(title="Session")
+        self.session_submenu.add(rumps.MenuItem(
+            title=self.config["start1"],
+            callback=self.handle_start_button(self.config["interval1"])
+        ))
+        self.session_submenu.add(rumps.MenuItem(
             title=self.config["start2"],
-            callback=self.start_timer
-        )
-        self.start_pause_break = rumps.MenuItem(
-            title=self.config["start_break"],
-            callback=self.start_timer
-        )
-        self.start_pause_break2 = rumps.MenuItem(
+            callback=self.handle_start_button(self.config["interval2"])
+        ))
+        self.break_submenu = rumps.MenuItem(title="Break")
+        self.break_submenu.add(rumps.MenuItem(
+            title=self.config["start_break1"],
+            callback=self.handle_start_button(
+                self.config["break_interval1"], True)
+        ))
+        self.break_submenu.add(rumps.MenuItem(
             title=self.config["start_break2"],
-            callback=self.start_timer
-        )
-        self.stop_button = rumps.MenuItem(
-            title=self.config["stop"],
-            callback=None
-        )
-        self.break_submenu = rumps.MenuItem(
-            title=self.config["break_menu"]
-        )
-        self.break_submenu.add(self.start_pause_break)
-        self.break_submenu.add(self.start_pause_break2)
-        self.app.menu = [
-            self.start_pause_timer,
-            self.start_pause_timer2,
-            self.stop_button,
-            self.break_submenu
-        ]
+            callback=self.handle_start_button(
+                self.config["break_interval2"], True)
+        ))
 
-        # Values/Attributes
-        self.interval = self.config["interval"]
-        self.interval2 = self.config["interval2"]
-        self.break_interval = self.config["break_interval"]
-        self.break_interval2 = self.config["break_interval2"]
-        self.overtime_interval = self.config["overtime_interval"]
-        self.is_break = False
+        self.update_title()
+        self.update_menu()
 
-        # Initiate
-        self.set_up_menu()
+    def start_timer(self, interval: int, is_break: bool = False):
+        self.state["timer_state"] = "running"
+        self.state["interval"] = interval
+        self.state["is_break"] = is_break
+        self.update_menu()
+        self.timer.start()
 
-    def set_up_menu(self):
+    def pause_timer(self):
+        self.state["timer_state"] = "paused"
+        self.update_menu()
         self.timer.stop()
-        self.timer.count = 0
-        self.app.title = "🍅"
-        self.stop_button.set_callback(None)
-        self.start_pause_timer.title = self.config["start"]
-        self.start_pause_timer2.title = self.config["start2"]
-        self.start_pause_break.title = self.config["start_break"]
-        self.start_pause_break2.title = self.config["start_break2"]
 
-    def on_tick(self, sender):
-        interval = sender.end
-        elapsed = sender.count
-        time_left = get_time_left(interval, elapsed)
-        mins = get_minutes_left(time_left)
-        is_break = self.is_break
-        overtime_interval = self.overtime_interval
+    def resume_timer(self):
+        self.state["timer_state"] = "running"
+        self.update_menu()
+        self.timer.start()
 
-        # Update Menu
-        self.app.title = get_formatted_time_for_mode(time_left, is_break)
+    def stop_timer(self):
+        self.timer.stop()
+        self.state = INITIAL_STATE.copy()
+        self.update_title()
+        self.update_menu()
 
-        # Send Notification
+    def get_title(self):
+        timer_state = self.state["timer_state"]
+        if timer_state == "stopped":
+            return "🍅"
+        time_left = self.state["interval"] - self.state["elapsed"]
+        is_break = self.state["is_break"]
+        return get_formatted_time_for_mode(time_left, is_break)
+
+    def update_title(self):
+        self.app.title = self.get_title()
+
+    def handle_start_button(self, interval: int, is_break: bool = False):
+        return (lambda _: self.start_timer(interval, is_break))
+
+    def handle_pause_button(self, _):
+        self.pause_timer()
+
+    def handle_resume_button(self, _):
+        self.resume_timer()
+
+    def handle_stop_button(self, _):
+        self.stop_timer()
+
+    def update_menu(self):
+        self.app.menu.clear()
+        timer_state = self.state["timer_state"]
+        is_break = self.state["is_break"]
+        mode = "Session" if not is_break == True else "Break"
+        if timer_state == "stopped":
+            self.app.menu = [self.session_submenu, self.break_submenu]
+        elif timer_state == "running":
+            pause_button = rumps.MenuItem(
+                title="Pause " + mode,
+                callback=self.handle_pause_button
+            )
+            stop_button = rumps.MenuItem(
+                title="Stop " + mode,
+                callback=self.handle_stop_button
+            )
+            self.app.menu = [pause_button, stop_button]
+        elif timer_state == "paused":
+            resume_button = rumps.MenuItem(
+                title="Resume " + mode,
+                callback=self.handle_resume_button
+            )
+            stop_button = rumps.MenuItem(
+                title="Stop " + mode,
+                callback=self.handle_stop_button
+            )
+            self.app.menu = [resume_button, stop_button]
+        self.app.menu.add(rumps.MenuItem(
+            title="Quit",
+            callback=rumps.quit_application
+        ))
+
+    def handle_notifications(self):
+        elapsed = self.state["elapsed"]
+        interval = self.state["interval"]
+        is_break = self.state["is_break"]
+        overtime_interval = self.config["overtime_interval"]
+        difference_in_seconds = interval - elapsed
+        minutes_overtime = minutes_for_timer(difference_in_seconds)
         noti_message = ""
         # Send notification if time is up
-        if should_send_timeup_message(time_left):
+        if should_send_timeup_message(difference_in_seconds):
             noti_message = self.config["timer_end_message"] if not is_break else self.config["break_end_message"]
         # Send halfway notification if not on break
         elif should_send_halfway_message(interval, elapsed, is_break):
             noti_message = self.config["halfway_message"]
         # Send overtime notification if over by __ minutes
-        elif should_send_overtime_message(overtime_interval, time_left):
-            noti_message = self.config["overtime_message"].format(mins)
+        elif should_send_overtime_message(overtime_interval, difference_in_seconds):
+            noti_message = self.config["overtime_message"].format(
+                minutes_overtime)
 
         if noti_message != "":
             rumps.notification(
@@ -159,52 +215,14 @@ class PomodoroApp(object):
                 message=''
             )
 
-        sender.count += 1
+    def on_tick(self, sender):
+        # Update title
+        self.update_title()
 
-    def send_notification(message):
-        rumps.notification(
-            title=CONFIG["app_name"],
-            subtitle=message,
-            message='')
+        # Send any notifications
+        self.handle_notifications()
 
-    def handle_notification(self, sender):
-        interval = sender.end
-        elapsed = sender.count
-        time_left = get_time_left(interval, elapsed)
-        mins = get_minutes_left(time_left)
-
-    # TODO: Separate button text updates from timer update. I.e., separate actions
-    def start_timer(self, sender):
-        self.stop_button.set_callback(self.stop_timer)
-        if sender.title == self.config["start"] or sender.title == self.config["start2"] or sender.title == self.config["continue"]:
-            self.is_break = False
-            if sender.title == self.config["start"]:
-                self.timer.count = 0
-                self.timer.end = self.interval
-            elif sender.title == self.config["start2"]:
-                self.timer.count = 0
-                self.timer.end = self.interval2
-            sender.title = self.config["pause"]
-            self.timer.start()
-        elif sender.title == self.config["start_break"] or sender.title == self.config["start_break2"] or sender.title == self.config["continue_break"]:
-            self.is_break = True
-            if sender.title == self.config["start_break"]:
-                self.timer.count = 0
-                self.timer.end = self.break_interval
-            elif sender.title == self.config["start_break2"]:
-                self.timer.count = 0
-                self.timer.end = self.break_interval2
-            sender.title = self.config["pause_break"]
-            self.timer.start()
-        elif sender.title == self.config["pause"]:
-            sender.title = self.config["continue"]
-            self.timer.stop()
-        elif sender.title == self.config["pause_break"]:
-            sender.title = self.config["continue_break"]
-            self.timer.stop()
-
-    def stop_timer(self, sender):
-        self.set_up_menu()
+        self.state["elapsed"] += 1
 
     def run(self):
         self.app.run()
