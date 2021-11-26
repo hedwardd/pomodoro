@@ -18,6 +18,7 @@ CONFIG = {
     "break_end_message": "Break's up. Time to get back to it :)",
     "halfway_message": "Halfway there!",
     "overtime_message": "Wrap it up! You're {:2d} minutes over",
+    "custom_input_button_label": "Custom",
     "interval1": 1800,
     "interval2": 900,
     "break_interval1": 600,
@@ -96,6 +97,11 @@ class PomodoroApp(object):
             title=self.config["start2"],
             callback=self.handle_start_button(self.config["interval2"])
         ))
+        # TODO: add custom input option for break
+        self.session_submenu.add(rumps.MenuItem(
+            title=self.config["custom_input_button_label"],
+            callback=self.handle_open_input_window
+        ))
         self.break_submenu = rumps.MenuItem(title="Start Break")
         self.break_submenu.add(rumps.MenuItem(
             title=self.config["start_break1"],
@@ -107,6 +113,15 @@ class PomodoroApp(object):
             callback=self.handle_start_button(
                 self.config["break_interval2"], True)
         ))
+
+        self.input_window = rumps.Window(
+            title='Custom Session',
+            message='Enter the duration in minutes',
+            default_text='',
+            ok='Start session',
+            cancel='Cancel',
+            dimensions=(150, 100),
+        )
 
         self.update_title()
         self.update_menu()
@@ -156,6 +171,14 @@ class PomodoroApp(object):
 
     def handle_stop_button(self, _):
         self.stop_timer()
+
+    def handle_open_input_window(self, _):
+        response = self.input_window.run()  # blocking ?
+        if response.clicked == 1:
+            # TODO: validate input
+            self.start_timer(int(response.text) * 60)
+        else:
+            self.input_window.close()
 
     def update_menu(self):
         self.app.menu.clear()
