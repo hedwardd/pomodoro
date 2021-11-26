@@ -18,6 +18,6 @@ This is my clone/remix of [Pomodoro](https://github.com/visini/pomodoro/), an op
 - Break Mode (Done)
 - More Interval Options (Done)
 - Overtime Notifications (Done)
-- Custom Intervals (Roadmap)
+- Custom Intervals (Done)
 
 ![Screenshot](screenshot.png)
