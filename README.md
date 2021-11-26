@@ -19,5 +19,8 @@ This is my clone/remix of [Pomodoro](https://github.com/visini/pomodoro/), an op
 - More Interval Options (Done)
 - Overtime Notifications (Done)
 - Custom Intervals (Done)
+- Ability to configure settings (Roadmap)
+- Handle timer updates after computer is asleep/blocked (Roadmap)
+- Keep log of sessions (Roadmap?)
 
 ![Screenshot](screenshot.png)
