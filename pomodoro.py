@@ -1,5 +1,4 @@
 import rumps
-from rumps.rumps import quit_application
 
 CONFIG = {
     "app_name": "Pomodoro Remix",
@@ -222,7 +221,7 @@ class PomodoroApp(object):
             self.app.menu = [resume_button, stop_button]
         self.app.menu.add(rumps.MenuItem(
             title="Quit",
-            callback=rumps.quit_application
+            callback=rumps.rumps.quit_application
         ))
 
     def handle_notifications(self):
