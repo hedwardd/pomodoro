@@ -3,15 +3,15 @@ from rumps.rumps import quit_application
 
 CONFIG = {
     "app_name": "Pomodoro Remix",
-    "start1": "Start 30m Session",
-    "start2": "Start 15m Session",
+    "start1": "30 min",
+    "start2": "15 min",
     "pause": "Pause Session",
     "continue": "Continue Session",
     "stop": "Stop Timer",
     "timer_end_message": "Time is up! Take a break :)",
     "break_menu": "Break",
-    "start_break1": "Start 10m Break",
-    "start_break2": "Start 5m Break",
+    "start_break1": "10 min",
+    "start_break2": " 5 min",
     "pause_break": "Pause Break",
     "continue_break": "Continue Break",
     "stop_break": "Stop Break",
@@ -87,7 +87,7 @@ class PomodoroApp(object):
         )
         self.timer = rumps.Timer(self.on_tick, 1)
 
-        self.session_submenu = rumps.MenuItem(title="Session")
+        self.session_submenu = rumps.MenuItem(title="Start Session")
         self.session_submenu.add(rumps.MenuItem(
             title=self.config["start1"],
             callback=self.handle_start_button(self.config["interval1"])
@@ -96,7 +96,7 @@ class PomodoroApp(object):
             title=self.config["start2"],
             callback=self.handle_start_button(self.config["interval2"])
         ))
-        self.break_submenu = rumps.MenuItem(title="Break")
+        self.break_submenu = rumps.MenuItem(title="Start Break")
         self.break_submenu.add(rumps.MenuItem(
             title=self.config["start_break1"],
             callback=self.handle_start_button(
