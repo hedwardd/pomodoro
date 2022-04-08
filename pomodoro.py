@@ -2,8 +2,9 @@ import rumps
 
 CONFIG = {
     "app_name": "Pomodoro Remix",
-    "start1": "30 min",
-    "start2": "15 min",
+    "start1": "40 min",
+    "start2": "30 min",
+    "start3": "15 min",
     "pause": "Pause Session",
     "continue": "Continue Session",
     "stop": "Stop Timer",
@@ -18,8 +19,9 @@ CONFIG = {
     "halfway_message": "Halfway there!",
     "overtime_message": "Wrap it up! You're {:2d} minutes over",
     "custom_input_button_label": "Custom",
-    "interval1": 1800,
-    "interval2": 900,
+    "interval1": 2400,
+    "interval2": 1800,
+    "interval3": 900,
     "break_interval1": 600,
     "break_interval2": 300,
     "overtime_interval": 300,
@@ -95,6 +97,10 @@ class PomodoroApp(object):
         self.session_submenu.add(rumps.MenuItem(
             title=self.config["start2"],
             callback=self.handle_start_button(self.config["interval2"])
+        ))
+        self.session_submenu.add(rumps.MenuItem(
+            title=self.config["start3"],
+            callback=self.handle_start_button(self.config["interval3"])
         ))
         self.session_submenu.add(rumps.MenuItem(
             title=self.config["custom_input_button_label"],
