@@ -19,13 +19,13 @@ CONFIG = {
     "halfway_message": "Halfway there!",
     "overtime_message": "Wrap it up! You're {:2d} minutes over",
     "custom_input_button_label": "Custom",
-    "interval1": 2400,
+    # "interval1": 2400,
     "interval2": 1800,
     "interval3": 900,
     "break_interval1": 600,
     "break_interval2": 300,
     "overtime_interval": 300,
-    # "interval1": 10,
+    "interval1": 10,
     # "interval2": 5,
     # "break_interval1": 8,
     # "break_interval2": 4,
@@ -238,9 +238,11 @@ class PomodoroApp(object):
         difference_in_seconds = interval - elapsed
         minutes_overtime = minutes_for_timer(difference_in_seconds)
         noti_message = ""
+        play_sound = False
         # Send notification if time is up
         if should_send_timeup_message(difference_in_seconds):
             noti_message = self.config["timer_end_message"] if not is_break else self.config["break_end_message"]
+            play_sound = True
         # Send halfway notification if not on break
         elif should_send_halfway_message(interval, elapsed, is_break):
             noti_message = self.config["halfway_message"]
@@ -248,12 +250,14 @@ class PomodoroApp(object):
         elif should_send_overtime_message(overtime_interval, difference_in_seconds):
             noti_message = self.config["overtime_message"].format(
                 minutes_overtime)
+            play_sound = True
 
         if noti_message != "":
             rumps.notification(
                 title=CONFIG["app_name"],
                 subtitle=noti_message,
-                message=''
+                message='',
+                sound=play_sound,
             )
 
     def on_tick(self, sender):
