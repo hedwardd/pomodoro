@@ -34,34 +34,34 @@ CONFIG = {
 }
 
 
-def minutes_for_timer(seconds):
+def minutes_for_timer(seconds: int):
     return seconds // 60 if seconds >= 0 else (-1 * seconds) // 60
 
 
-def seconds_for_timer(seconds):
+def seconds_for_timer(seconds: int):
     return seconds % 60 if seconds >= 0 else (-1 * seconds) % 60
 
 
-def formatted_time_from_seconds(seconds):
+def formatted_time_from_seconds(seconds: int):
     mins = minutes_for_timer(seconds)
     secs = seconds_for_timer(seconds)
     return '{:2d}:{:02d}'.format(mins, secs) if seconds >= 0 else '(+{:2d}:{:02d} )'.format(mins, secs)
 
 
-def get_formatted_time_for_mode(seconds_left, is_break):
+def get_formatted_time_for_mode(seconds_left: int, is_break: bool):
     formatted_time = formatted_time_from_seconds(seconds_left)
     return formatted_time if not is_break else "🧘‍♂️" + formatted_time + "🧘‍♀️"
 
 
-def should_send_timeup_message(time_left):
+def should_send_timeup_message(time_left: int):
     return time_left == 0
 
 
-def should_send_halfway_message(interval, elapsed, is_break):
+def should_send_halfway_message(interval: int, elapsed: int, is_break: bool):
     return elapsed > 0 and interval / elapsed == 2 and not is_break
 
 
-def should_send_overtime_message(overtime_interval, time_left):
+def should_send_overtime_message(overtime_interval: int, time_left: int):
     return time_left < 0 and time_left % overtime_interval == 0
 
 
@@ -174,11 +174,11 @@ class PomodoroApp(object):
         self.update_menu()
 
     def get_title(self):
-        timer_state = self.state["timer_state"]
+        timer_state: str = self.state["timer_state"]
         if timer_state == "stopped":
             return "🍅"
-        time_left = self.state["interval"] - self.state["elapsed"]
-        is_break = self.state["is_break"]
+        time_left: int = self.state["interval"] - self.state["elapsed"]
+        is_break: bool = self.state["is_break"]
         return get_formatted_time_for_mode(time_left, is_break)
 
     def update_title(self):
@@ -202,8 +202,8 @@ class PomodoroApp(object):
     def update_menu(self):
         self.app.menu.clear()
         timer_state = self.state["timer_state"]
-        is_break = self.state["is_break"]
-        mode = "Session" if not is_break == True else "Break"
+        is_break: bool = self.state["is_break"]
+        mode = "Session" if not is_break else "Break"
         if timer_state == "stopped":
             self.app.menu = [self.session_submenu, self.break_submenu]
         elif timer_state == "running":
@@ -248,9 +248,9 @@ class PomodoroApp(object):
         )
 
     def handle_notifications(self):
-        elapsed = self.state["elapsed"]
-        interval = self.state["interval"]
-        is_break = self.state["is_break"]
+        elapsed: int = self.state["elapsed"]
+        interval: int = self.state["interval"]
+        is_break: bool = self.state["is_break"]
         overtime_interval = self.config["overtime_interval"]
         difference_in_seconds = interval - elapsed
         minutes_overtime = minutes_for_timer(difference_in_seconds)
