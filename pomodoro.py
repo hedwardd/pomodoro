@@ -27,6 +27,7 @@ CONFIG = {
     "overtime_interval": 300,
     # "interval1": 10,
     # "interval2": 5,
+    # "interval3": 5,
     # "break_interval1": 8,
     # "break_interval2": 4,
     # "overtime_interval": 5,
@@ -230,6 +231,22 @@ class PomodoroApp(object):
             callback=rumps.rumps.quit_application
         ))
 
+    def send_notification(self, message: str = '', sound: bool = False):
+        rumps.notification(
+            title=CONFIG["app_name"],
+            subtitle=message,
+            message='',
+            sound=sound,
+        )
+
+    def send_alert(self, message: str = '', ok_text: str = 'OK', cancel_text: str = 'Cancel'):
+        return rumps.alert(
+            title=CONFIG["app_name"],
+            message=message,
+            ok=ok_text,
+            cancel=cancel_text
+        )
+
     def handle_notifications(self):
         elapsed = self.state["elapsed"]
         interval = self.state["interval"]
@@ -237,28 +254,23 @@ class PomodoroApp(object):
         overtime_interval = self.config["overtime_interval"]
         difference_in_seconds = interval - elapsed
         minutes_overtime = minutes_for_timer(difference_in_seconds)
-        noti_message = ""
-        play_sound = False
+
         # Send notification if time is up
         if should_send_timeup_message(difference_in_seconds):
             noti_message = self.config["timer_end_message"] if not is_break else self.config["break_end_message"]
-            play_sound = True
+            # self.send_notification(noti_message, True)
+            self.send_alert(noti_message)
+
         # Send halfway notification if not on break
         elif should_send_halfway_message(interval, elapsed, is_break):
             noti_message = self.config["halfway_message"]
+            self.send_notification(noti_message, False)
+
         # Send overtime notification if over by __ minutes
         elif should_send_overtime_message(overtime_interval, difference_in_seconds):
             noti_message = self.config["overtime_message"].format(
                 minutes_overtime)
-            play_sound = True
-
-        if noti_message != "":
-            rumps.notification(
-                title=CONFIG["app_name"],
-                subtitle=noti_message,
-                message='',
-                sound=play_sound,
-            )
+            self.send_notification(noti_message, True)
 
     def on_tick(self, sender):
         # Update title
