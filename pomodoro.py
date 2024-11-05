@@ -1,4 +1,5 @@
 import rumps
+from datetime import datetime
 
 CONFIG = {
     "app_name": "Pomodoro Remix",
@@ -68,6 +69,9 @@ def should_send_overtime_message(overtime_interval: int, time_left: int):
 INITIAL_STATE = {
     "timer_state": "stopped",
     "elapsed": 0,
+    "pause_total": 0,
+    "start_time": None,
+    "pause_time": None,
     "is_break": False,
     "interval": CONFIG["interval1"],
 }
@@ -154,18 +158,21 @@ class PomodoroApp(object):
         self.state["timer_state"] = "running"
         self.state["interval"] = interval
         self.state["is_break"] = is_break
+        self.state["start_time"] = datetime.now()
+        self.state["pause_time"] = None
+        self.state["elapsed"] = 0
+        self.state["pause_total"] = 0
         self.update_menu()
         self.timer.start()
 
     def pause_timer(self):
         self.state["timer_state"] = "paused"
         self.update_menu()
-        self.timer.stop()
 
     def resume_timer(self):
         self.state["timer_state"] = "running"
+        self.state["pause_time"] = None
         self.update_menu()
-        self.timer.start()
 
     def stop_timer(self):
         self.timer.stop()
@@ -183,6 +190,15 @@ class PomodoroApp(object):
 
     def update_title(self):
         self.app.title = self.get_title()
+
+    def update_elapsed_time(self):
+        self.state["elapsed"] = (datetime.now() - self.state["start_time"]).seconds - self.state["pause_total"]
+
+    def update_paused_time(self):
+        if self.state["pause_time"] is None:
+                self.state["pause_time"] = datetime.now()
+        time_since_paused = (datetime.now() - self.state["pause_time"]).seconds
+        self.state["pause_total"] += time_since_paused
 
     def handle_start_button(self, interval: int, is_break: bool = False):
         return (lambda _: self.start_timer(interval, is_break))
@@ -279,7 +295,10 @@ class PomodoroApp(object):
         # Send any notifications
         self.handle_notifications()
 
-        self.state["elapsed"] += 1
+        if self.state["timer_state"] == "running":
+            self.update_elapsed_time()
+        elif self.state["timer_state"] == "paused":
+            self.update_paused_time()
 
     def run(self):
         self.app.run()
