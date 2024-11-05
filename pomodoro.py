@@ -71,7 +71,6 @@ INITIAL_STATE = {
     "elapsed": 0,
     "pause_total": 0,
     "start_time": None,
-    "pause_time": None,
     "is_break": False,
     "interval": CONFIG["interval1"],
 }
@@ -159,7 +158,6 @@ class PomodoroApp(object):
         self.state["interval"] = interval
         self.state["is_break"] = is_break
         self.state["start_time"] = datetime.now()
-        self.state["pause_time"] = None
         self.state["elapsed"] = 0
         self.state["pause_total"] = 0
         self.update_menu()
@@ -171,7 +169,6 @@ class PomodoroApp(object):
 
     def resume_timer(self):
         self.state["timer_state"] = "running"
-        self.state["pause_time"] = None
         self.update_menu()
 
     def stop_timer(self):
@@ -190,15 +187,6 @@ class PomodoroApp(object):
 
     def update_title(self):
         self.app.title = self.get_title()
-
-    def update_elapsed_time(self):
-        self.state["elapsed"] = (datetime.now() - self.state["start_time"]).seconds - self.state["pause_total"]
-
-    def update_paused_time(self):
-        if self.state["pause_time"] is None:
-                self.state["pause_time"] = datetime.now()
-        time_since_paused = (datetime.now() - self.state["pause_time"]).seconds
-        self.state["pause_total"] += time_since_paused
 
     def handle_start_button(self, interval: int, is_break: bool = False):
         return (lambda _: self.start_timer(interval, is_break))
@@ -296,9 +284,9 @@ class PomodoroApp(object):
         self.handle_notifications()
 
         if self.state["timer_state"] == "running":
-            self.update_elapsed_time()
+            self.state["elapsed"] = (datetime.now() - self.state["start_time"]).seconds - self.state["pause_total"]
         elif self.state["timer_state"] == "paused":
-            self.update_paused_time()
+            self.state["pause_total"] += 1
 
     def run(self):
         self.app.run()
